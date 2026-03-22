@@ -2,252 +2,102 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web VPN - Обход блокировок</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
+            font-family: sans-serif;
+            background: #0a0a0f;
             color: #fff;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
             padding: 20px;
         }
-        
-        .header {
-            text-align: center;
-            padding: 40px 0;
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 8px;
         }
-        
-        .header h1 {
-            font-size: 48px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        input {
+            width: 60%;
+            background: #1a1a1f;
+            border: 1px solid #333;
+            color: #fff;
         }
-        
-        .header p {
-            color: #888;
-            margin-top: 10px;
-        }
-        
-        .card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            margin: 20px 0;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .url-input {
-            width: 100%;
-            padding: 15px;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
-            color: white;
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-        
-        .url-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+        button {
+            background: #667eea;
             border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
-            font-size: 16px;
             cursor: pointer;
-            margin-right: 10px;
-            transition: transform 0.2s;
         }
-        
-        .btn:hover {
-            transform: scale(1.02);
+        .proxy-btn {
+            background: #2a2a2f;
+            margin: 3px;
         }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+        .active {
+            background: #667eea;
         }
-        
-        .iframe-container {
-            margin-top: 20px;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #fff;
-        }
-        
         iframe {
             width: 100%;
             height: 70vh;
-            border: none;
-        }
-        
-        .status {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #4caf50;
-            margin-right: 8px;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        .proxy-list {
             margin-top: 20px;
-        }
-        
-        .proxy-item {
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            margin: 5px 0;
+            border: 1px solid #333;
             border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
         }
-        
-        .proxy-item:hover {
-            background: rgba(255,255,255,0.2);
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
         }
-        
-        .proxy-active {
-            background: rgba(102, 126, 234, 0.4);
-            border-left: 3px solid #667eea;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 30px;
-            color: #666;
-            font-size: 12px;
-        }
-        
-        @media (max-width: 600px) {
-            .container {
-                padding: 10px;
-            }
-            .header h1 {
-                font-size: 32px;
-            }
-            iframe {
-                height: 60vh;
-            }
-        }
-        
-        .note {
-            font-size: 11px;
-            color: #ffaa66;
-            margin-top: 10px;
-            text-align: center;
-        }
+        .status-loading { background: #ffaa33; color: #000; }
+        .status-success { background: #4caf50; }
+        .status-error { background: #f44336; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 WEB VPN</h1>
-            <p>Обход блокировок через браузер | Бесплатно</p>
-        </div>
-        
-        <div class="card">
-            <div style="margin-bottom: 15px;">
-                <span class="status"></span>
-                <span id="statusText">Сервер активен</span>
-                <span style="float: right;">🌐 IP: <span id="currentIp">загрузка...</span></span>
-            </div>
-            
-            <input type="text" id="urlInput" class="url-input" placeholder="Введите URL (например, google.com или https://example.com)">
-            
-            <button class="btn" onclick="goToUrl()">🔓 ОТКРЫТЬ</button>
-            <button class="btn btn-danger" onclick="clearIframe()">🗑️ ОЧИСТИТЬ</button>
-            
-            <div class="proxy-list">
-                <div class="proxy-item" data-proxy="https://api.allorigins.win/raw?url=" onclick="setProxy(this, 'https://api.allorigins.win/raw?url=')">
-                    🔄 All Origins (рекомендуемый)
-                </div>
-                <div class="proxy-item" data-proxy="https://cors-anywhere.herokuapp.com/" onclick="setProxy(this, 'https://cors-anywhere.herokuapp.com/')">
-                    🌍 CORS Anywhere
-                </div>
-                <div class="proxy-item" data-proxy="https://proxy.cors.sh/" onclick="setProxy(this, 'https://proxy.cors.sh/')">
-                    🚀 CORS.sh
-                </div>
-                <div class="proxy-item" data-proxy="https://thingproxy.freeboard.io/fetch/" onclick="setProxy(this, 'https://thingproxy.freeboard.io/fetch/')">
-                    📡 Freeboard Proxy
-                </div>
-            </div>
-            <div class="note">
-                💡 Если сайт не открывается, попробуй другой прокси
-            </div>
-        </div>
-        
-        <div id="iframeContainer" class="iframe-container" style="display: none;">
-            <iframe id="contentFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
-        </div>
-        
-        <div class="footer">
-            🔒 Анонимный доступ | Не сохраняем историю | Обход блокировок
-        </div>
+    <h1>🚀 WEB VPN</h1>
+    <p>🌐 Ваш IP: <span id="ip">загрузка...</span></p>
+    
+    <input type="text" id="url" placeholder="google.com или любой другой сайт">
+    <button onclick="openUrl()">🔓 ОТКРЫТЬ ЧЕРЕЗ VPN</button>
+    <button onclick="clearIframe()">🗑️ ОЧИСТИТЬ</button>
+    
+    <div>
+        <button class="proxy-btn" data-proxy="https://api.allorigins.win/raw?url=" onclick="setProxy(this)">🔄 All Origins</button>
+        <button class="proxy-btn" data-proxy="https://cors-proxy.xyz/?url=" onclick="setProxy(this)">⚡ CORS Proxy XYZ</button>
+        <button class="proxy-btn" data-proxy="https://proxy.cors.workers.dev/?url=" onclick="setProxy(this)">🚀 Workers Proxy</button>
+        <button class="proxy-btn" data-proxy="https://cors.abstractapi.com/v1/?url=" onclick="setProxy(this)">📡 Abstract API</button>
     </div>
+    
+    <div id="status" class="status"></div>
+    
+    <iframe id="frame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
     
     <script>
         let currentProxy = 'https://api.allorigins.win/raw?url=';
         
-        // Подсветка активного прокси
-        function setProxy(element, proxy) {
-            currentProxy = proxy;
-            // Убираем подсветку у всех
-            document.querySelectorAll('.proxy-item').forEach(item => {
-                item.classList.remove('proxy-active');
-            });
-            // Подсвечиваем выбранный
-            element.classList.add('proxy-active');
-            
-            // Показываем уведомление
-            const proxyName = element.innerText.split(' ')[1];
-            document.getElementById('statusText').innerHTML = `Прокси: ${proxyName} готов`;
-            setTimeout(() => {
-                if (document.getElementById('iframeContainer').style.display === 'none') {
-                    document.getElementById('statusText').innerHTML = 'Сервер активен';
-                }
-            }, 2000);
+        fetch('https://api.ipify.org?format=json')
+            .then(r => r.json())
+            .then(d => document.getElementById('ip').innerText = d.ip)
+            .catch(() => document.getElementById('ip').innerText = 'не определен');
+        
+        function setProxy(btn) {
+            currentProxy = btn.getAttribute('data-proxy');
+            document.querySelectorAll('.proxy-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            showStatus('✅ Прокси выбран: ' + btn.innerText, 'success');
         }
         
-        // Получаем IP
-        fetch('https://api.ipify.org?format=json')
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('currentIp').innerText = data.ip;
-            })
-            .catch(() => {
-                document.getElementById('currentIp').innerText = 'не определен';
-            });
+        function showStatus(msg, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = msg;
+            statusDiv.className = 'status status-' + type;
+            setTimeout(() => {
+                if (statusDiv.innerHTML === msg) {
+                    statusDiv.innerHTML = '';
+                    statusDiv.className = 'status';
+                }
+            }, 3000);
+        }
         
-        function goToUrl() {
-            let url = document.getElementById('urlInput').value.trim();
-            
+        async function openUrl() {
+            let url = document.getElementById('url').value.trim();
             if (!url) {
                 alert('Введите URL');
                 return;
@@ -257,64 +107,49 @@
                 url = 'https://' + url;
             }
             
-            const iframe = document.getElementById('contentFrame');
-            const container = document.getElementById('iframeContainer');
+            const iframe = document.getElementById('frame');
             
-            container.style.display = 'block';
+            showStatus('🔄 Открываю через VPN...', 'loading');
             
-            // Формируем прокси-URL
             let proxyUrl;
-            if (currentProxy.includes('cors-anywhere')) {
-                proxyUrl = currentProxy + url;
-            } else if (currentProxy.includes('allorigins')) {
+            if (currentProxy.includes('allorigins')) {
                 proxyUrl = currentProxy + encodeURIComponent(url);
             } else {
                 proxyUrl = currentProxy + encodeURIComponent(url);
             }
             
             iframe.src = proxyUrl;
-            document.getElementById('statusText').innerHTML = '🔄 Загрузка...';
-            
-            // Таймаут на случай ошибки
-            setTimeout(() => {
-                if (document.getElementById('statusText').innerHTML === '🔄 Загрузка...') {
-                    document.getElementById('statusText').innerHTML = '⚠️ Долгая загрузка, попробуйте другой прокси';
-                }
-            }, 10000);
             
             iframe.onload = () => {
-                document.getElementById('statusText').innerHTML = '✅ Загружено';
-                setTimeout(() => {
-                    if (document.getElementById('iframeContainer').style.display !== 'none') {
-                        document.getElementById('statusText').innerHTML = 'Сервер активен';
-                    }
-                }, 2000);
+                showStatus('✅ Успешно открыто: ' + url, 'success');
             };
             
             iframe.onerror = () => {
-                document.getElementById('statusText').innerHTML = '❌ Ошибка, попробуйте другой прокси';
+                showStatus('❌ Ошибка. Попробуйте другой прокси или сайт', 'error');
             };
+            
+            setTimeout(() => {
+                try {
+                    if (iframe.contentDocument && iframe.contentDocument.title === '') {
+                        showStatus('⚠️ Долгая загрузка. Возможно, нужно сменить прокси', 'loading');
+                    }
+                } catch(e) {}
+            }, 10000);
         }
         
         function clearIframe() {
-            const iframe = document.getElementById('contentFrame');
-            const container = document.getElementById('iframeContainer');
-            
-            iframe.src = '';
-            container.style.display = 'none';
-            document.getElementById('statusText').innerHTML = 'Сервер активен';
-            document.getElementById('urlInput').value = '';
+            document.getElementById('frame').src = '';
+            document.getElementById('url').value = '';
+            document.getElementById('status').innerHTML = '';
+            showStatus('🧹 Очищено', 'success');
         }
         
-        // Enter для отправки
-        document.getElementById('urlInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                goToUrl();
-            }
+        document.getElementById('url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') openUrl();
         });
         
-        // Подсветка All Origins по умолчанию
-        document.querySelector('.proxy-item[data-proxy="https://api.allorigins.win/raw?url="]').classList.add('proxy-active');
+        // Подсветка первого прокси
+        document.querySelector('.proxy-btn').classList.add('active');
     </script>
 </body>
 </html>
